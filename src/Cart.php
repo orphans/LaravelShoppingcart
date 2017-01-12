@@ -25,7 +25,7 @@ class Cart
 
     /**
      * Instance of the event dispatcher.
-     * 
+     *
      * @var \Illuminate\Contracts\Events\Dispatcher
      */
     private $events;
@@ -103,7 +103,7 @@ class Cart
         }
 
         $content->put($cartItem->rowId, $cartItem);
-        
+
         $this->events->fire('cart.added', $cartItem);
 
         $this->session->put($this->instance, $content);
@@ -346,19 +346,30 @@ class Cart
      * @param mixed $identifier
      * @return void
      */
-    public function store($identifier)
+    public function store($identifier, $allow_overwrite = false)
     {
         $content = $this->getContent();
 
-        if ($this->storedCartWithIdentifierExists($identifier)) {
+        if ($allow_overwrite === false && $this->storedCartWithIdentifierExists($identifier)) {
             throw new CartAlreadyStoredException("A cart with identifier {$identifier} was already stored.");
         }
 
-        $this->getConnection()->table($this->getTableName())->insert([
-            'identifier' => $identifier,
-            'instance' => $this->currentInstance(),
-            'content' => serialize($content)
-        ]);
+        if ($this->storedCartWithIdentifierExists($identifier)) {
+            $this->getConnection()->table($this->getTableName())->update([
+                'identifier' => $identifier,
+                'instance' => $this->currentInstance(),
+                'content' => serialize($content),
+                'updated_at' => new \DateTime(),
+            ]);
+        } else {
+            $this->getConnection()->table($this->getTableName())->insert([
+                'identifier' => $identifier,
+                'instance' => $this->currentInstance(),
+                'content' => serialize($content),
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
+            ]);
+        }
 
         $this->events->fire('cart.stored');
     }
