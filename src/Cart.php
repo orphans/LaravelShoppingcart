@@ -214,13 +214,25 @@ class Cart
      *
      * @return \Illuminate\Support\Collection
      */
-    public function content()
+    public function content($coupons = false, $shipping = false)
     {
         if (is_null($this->session->get($this->instance))) {
             return new Collection([]);
         }
 
-        return $this->session->get($this->instance);
+        if ($coupons === true && $shipping === true) {
+            return $this->session->get($this->instance)->where('is_coupon', true)->where('is_shipping', true);
+        }
+
+        if ($coupons === true) {
+            return $this->session->get($this->instance)->where('is_coupon', true);
+        }
+
+        if ($shipping === true) {
+            return $this->session->get($this->instance)->where('is_shipping', true);
+        }
+
+        return $this->session->get($this->instance)->where('is_coupon', false)->where('is_shipping', false);
     }
 
     /**
@@ -232,7 +244,8 @@ class Cart
     {
         $content = $this->getContent();
 
-        return $content->sum('qty');
+        // Don't include shipping or coupons
+        return $content->where('is_coupon', false)->where('is_shipping', false)->sum('qty');
     }
 
     /**
@@ -243,9 +256,13 @@ class Cart
      * @param string $thousandSeperator
      * @return string
      */
-    public function total($decimals = null, $decimalPoint = null, $thousandSeperator = null)
+    public function total($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true)
     {
-        $content = $this->getContent();
+        if ($include_shipping === true) {
+            $content = $this->getContent();
+        } else {
+            $content = $this->getContent()->where('is_shipping', false);
+        }
 
         $total = $content->reduce(function ($total, CartItem $cartItem) {
             return $total + ($cartItem->qty * $cartItem->priceTax);
@@ -262,9 +279,13 @@ class Cart
      * @param string $thousandSeperator
      * @return float
      */
-    public function tax($decimals = null, $decimalPoint = null, $thousandSeperator = null)
+    public function tax($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true)
     {
-        $content = $this->getContent();
+        if ($include_shipping === true) {
+            $content = $this->getContent();
+        } else {
+            $content = $this->getContent()->where('is_shipping', false);
+        }
 
         $tax = $content->reduce(function ($tax, CartItem $cartItem) {
             return $tax + ($cartItem->qty * $cartItem->tax);
@@ -283,7 +304,8 @@ class Cart
      */
     public function subtotal($decimals = null, $decimalPoint = null, $thousandSeperator = null)
     {
-        $content = $this->getContent();
+        // This is a good total, so exclude coupons and shipping
+        $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
 
         $subTotal = $content->reduce(function ($subTotal, CartItem $cartItem) {
             return $subTotal + ($cartItem->qty * $cartItem->price);

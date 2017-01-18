@@ -69,14 +69,14 @@ class CartItem implements Arrayable
      *
      * @var int|float
      */
-    private $is_coupon = false;
+    public $is_coupon = false;
 
     /**
      * Is this a special line for shipping costs.
      *
      * @var int|float
      */
-    private $is_shipping = false;
+    public $is_shipping = false;
 
     /**
      * CartItem constructor.
