@@ -84,9 +84,11 @@ class Cart
      * @param int|float $qty
      * @param float     $price
      * @param array     $options
+     * @param boolean    $is_coupon
+     * @param boolean    $is_shipping
      * @return \Gloudemans\Shoppingcart\CartItem
      */
-    public function add($id, $name = null, $qty = null, $price = null, array $options = [])
+    public function add($id, $name = null, $qty = null, $price = null, array $options = [], $is_coupon = false, $is_shipping = false)
     {
         if ($this->isMulti($id)) {
             return array_map(function ($item) {
@@ -94,11 +96,18 @@ class Cart
             }, $id);
         }
 
-        $cartItem = $this->createCartItem($id, $name, $qty, $price, $options);
+        // Only allow one shipping item
+        if ($this->shippingItem() !== null) {
+            return false;
+        }
+
+        $cartItem = $this->createCartItem($id, $name, $qty, $price, $options, $is_coupon, $is_shipping);
 
         $content = $this->getContent();
 
-        if ($content->has($cartItem->rowId)) {
+        if ($is_coupon || $is_shipping) {
+            $cartItem->qty = 1; // safety measure
+        } else if ($content->has($cartItem->rowId)) {
             $cartItem->qty += $content->get($cartItem->rowId)->qty;
         }
 
@@ -451,6 +460,25 @@ class Cart
     }
 
     /**
+     * Get the delivery item from the Cart
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function shippingItem()
+    {
+        $content = $this->getContent();
+
+        // dd($content);
+        foreach ($content as $item) {
+            if ($item->is_shipping === true) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Create a new CartItem from the supplied attributes.
      *
      * @param mixed     $id
@@ -460,7 +488,7 @@ class Cart
      * @param array     $options
      * @return \Gloudemans\Shoppingcart\CartItem
      */
-    private function createCartItem($id, $name, $qty, $price, array $options)
+    private function createCartItem($id, $name, $qty, $price, array $options, $is_coupon = false, $is_shipping = false)
     {
         if ($id instanceof Buyable) {
             $cartItem = CartItem::fromBuyable($id, $qty ?: []);
@@ -470,7 +498,8 @@ class Cart
             $cartItem = CartItem::fromArray($id);
             $cartItem->setQuantity($id['qty']);
         } else {
-            $cartItem = CartItem::fromAttributes($id, $name, $price, $options);
+            // dd($is_shipping);
+            $cartItem = CartItem::fromAttributes($id, $name, $price, $options, $is_coupon, $is_shipping);
             $cartItem->setQuantity($qty);
         }
 
