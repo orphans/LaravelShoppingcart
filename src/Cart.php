@@ -386,8 +386,7 @@ class Cart
         }
 
         if ($this->storedCartWithIdentifierExists($identifier)) {
-            $this->getConnection()->table($this->getTableName())->update([
-                'identifier' => $identifier,
+            $this->getConnection()->table($this->getTableName())->where('identifier', $identifier)->update([
                 'instance' => $this->currentInstance(),
                 'content' => serialize($content),
                 'updated_at' => new \DateTime(),
