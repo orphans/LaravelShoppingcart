@@ -84,11 +84,12 @@ class Cart
      * @param int|float $qty
      * @param float     $price
      * @param array     $options
+     * @param float     $weight
      * @param boolean    $is_coupon
      * @param boolean    $is_shipping
      * @return \Gloudemans\Shoppingcart\CartItem
      */
-    public function add($id, $name = null, $qty = null, $price = null, array $options = [], $is_coupon = false, $is_shipping = false)
+    public function add($id, $name = null, $qty = null, $price = null, array $options = [], $weight = 0, $is_coupon = false, $is_shipping = false)
     {
         if ($this->isMulti($id)) {
             return array_map(function ($item) {
@@ -97,11 +98,11 @@ class Cart
         }
 
         // Only allow one shipping item
-        if ($this->shippingItem() !== null) {
+        if ($is_shipping === true && $this->shippingItem() !== null) {
             return false;
         }
 
-        $cartItem = $this->createCartItem($id, $name, $qty, $price, $options, $is_coupon, $is_shipping);
+        $cartItem = $this->createCartItem($id, $name, $qty, $price, $options, $weight, $is_coupon, $is_shipping);
 
         $content = $this->getContent();
 
@@ -315,6 +316,26 @@ class Cart
     }
 
     /**
+     * Get the total weight of the items in the cart.
+     *
+     * @param int    $decimals
+     * @param string $decimalPoint
+     * @param string $thousandSeperator
+     * @return float
+     */
+    public function weight($decimals = null, $decimalPoint = null, $thousandSeperator = null)
+    {
+        // This is a good total, so exclude coupons and shipping
+        $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
+
+        $cartWeight = $content->reduce(function ($cartWeight, CartItem $cartItem) {
+            return $cartWeight + ($cartItem->qty * $cartItem->weight);
+        }, 0);
+
+        return $this->numberFormat($cartWeight, $decimals, $decimalPoint, $thousandSeperator);
+    }
+
+    /**
      * Search the cart content for a cart item matching the given search closure.
      *
      * @param \Closure $search
@@ -444,7 +465,7 @@ class Cart
     }
 
     /**
-     * Magic method to make accessing the total, tax and subtotal properties possible.
+     * Magic method to make accessing the total, tax, subtotal and weight properties possible.
      *
      * @param string $attribute
      * @return float|null
@@ -461,6 +482,10 @@ class Cart
 
         if($attribute === 'subtotal') {
             return $this->subtotal();
+        }
+
+        if($attribute === 'weight') {
+            return $this->weight();
         }
 
         return null;
@@ -489,7 +514,6 @@ class Cart
     {
         $content = $this->getContent();
 
-        // dd($content);
         foreach ($content as $item) {
             if ($item->is_shipping === true) {
                 return $item;
@@ -509,7 +533,7 @@ class Cart
      * @param array     $options
      * @return \Gloudemans\Shoppingcart\CartItem
      */
-    private function createCartItem($id, $name, $qty, $price, array $options, $is_coupon = false, $is_shipping = false)
+    private function createCartItem($id, $name, $qty, $price, array $options, $weight = 0, $is_coupon = false, $is_shipping = false)
     {
         if ($id instanceof Buyable) {
             $cartItem = CartItem::fromBuyable($id, $qty ?: []);
@@ -519,8 +543,7 @@ class Cart
             $cartItem = CartItem::fromArray($id);
             $cartItem->setQuantity($id['qty']);
         } else {
-            // dd($is_shipping);
-            $cartItem = CartItem::fromAttributes($id, $name, $price, $options, $is_coupon, $is_shipping);
+            $cartItem = CartItem::fromAttributes($id, $name, $price, $options, $weight, $is_coupon, $is_shipping);
             $cartItem->setQuantity($qty);
         }
 

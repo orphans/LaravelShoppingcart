@@ -65,6 +65,13 @@ class CartItem implements Arrayable
     private $taxRate = 0;
 
     /**
+     * The weight of the cart item.
+     *
+     * @var int|float
+     */
+    public $weight;
+
+    /**
      * Is this a special line for a discount.
      *
      * @var int|float
@@ -85,10 +92,11 @@ class CartItem implements Arrayable
      * @param string     $name
      * @param float      $price
      * @param array      $options
+     * @param float      $weight
      * @param boolean    $is_coupon
      * @param boolean    $is_shipping
      */
-    public function __construct($id, $name, $price, array $options = [],  $is_coupon = false, $is_shipping = false)
+    public function __construct($id, $name, $price, array $options = [], $weight = 0, $is_coupon = false, $is_shipping = false)
     {
         if(empty($id)) {
             throw new \InvalidArgumentException('Please supply a valid identifier.');
@@ -104,6 +112,7 @@ class CartItem implements Arrayable
         $this->name = $name;
         $this->price = floatval($price);
         $this->options = new CartItemOptions($options);
+        $this->weight = $weight;
         $this->is_coupon = $is_coupon === true ? true : false;
         $this->is_shipping = $is_shipping === true ? true : false;
         $this->rowId = $this->generateRowId($id, $options);
@@ -190,6 +199,19 @@ class CartItem implements Arrayable
     }
 
     /**
+     * Returns the formatted total weight.
+     *
+     * @param int    $decimals
+     * @param string $decimalPoint
+     * @param string $thousandSeperator
+     * @return string
+     */
+    public function totalWeight($decimals = null, $decimalPoint = null, $thousandSeperator = null)
+    {
+        return $this->numberFormat($this->totalWeight, $decimals, $decimalPoint, $thousandSeperator);
+    }
+
+    /**
      * Set the quantity for this cart item.
      *
      * @param int|float $qty
@@ -230,6 +252,7 @@ class CartItem implements Arrayable
         $this->price    = array_get($attributes, 'price', $this->price);
         $this->priceTax = $this->price + $this->tax;
         $this->options  = new CartItemOptions(array_get($attributes, 'options', $this->options));
+        $this->weight    = array_get($attributes, 'weight', $this->weight);
         $this->is_coupon    = array_get($attributes, 'is_coupon', $this->is_coupon);
         $this->is_shipping    = array_get($attributes, 'is_shipping', $this->is_shipping);
 
@@ -298,6 +321,10 @@ class CartItem implements Arrayable
             return with(new $this->associatedModel)->find($this->id);
         }
 
+        if($attribute === 'totalWeight') {
+            return $this->weight * $this->qty;
+        }
+
         return null;
     }
 
@@ -335,9 +362,9 @@ class CartItem implements Arrayable
      * @param array      $options
      * @return \Gloudemans\Shoppingcart\CartItem
      */
-    public static function fromAttributes($id, $name, $price, array $options = [], $is_coupon = false, $is_shipping = false)
+    public static function fromAttributes($id, $name, $price, array $options = [], $weight = 0, $is_coupon = false, $is_shipping = false)
     {
-        return new self($id, $name, $price, $options, $is_coupon, $is_shipping);
+        return new self($id, $name, $price, $options, $weight, $is_coupon, $is_shipping);
     }
 
     /**
@@ -368,10 +395,12 @@ class CartItem implements Arrayable
             'qty'      => $this->qty,
             'price'    => $this->price,
             'options'  => $this->options,
+            'weight'  => $this->weight,
             'is_coupon'  => $this->is_coupon,
             'is_shipping'  => $this->is_shipping,
             'tax'      => $this->tax,
-            'subtotal' => $this->subtotal
+            'subtotal' => $this->subtotal,
+            'totalWeight' => $this->totalWeight
         ];
     }
 
