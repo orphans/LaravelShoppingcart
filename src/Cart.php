@@ -257,17 +257,27 @@ class Cart
      * @param string $thousandSeperator
      * @return string
      */
-    public function total($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true)
+    public function total($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_discount = true, $include_shipping = true)
     {
         if ($include_shipping === true) {
-            $content = $this->getContent();
+            $content = $this->getContent()->where('is_coupon', false);
         } else {
-            $content = $this->getContent()->where('is_shipping', false);
+            $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
         }
 
         $total = $content->reduce(function ($total, CartItem $cartItem) {
             return $total + ($cartItem->qty * $cartItem->priceTax);
         }, 0);
+
+        // Subtract the discount
+        if ($include_discount === true) {
+            $coupons = $this->content(true);
+            if ($coupons !== null) {
+                foreach ($coupons as $coupon) {
+                    $total -= $coupon->price;
+                }
+            }
+        }
 
         return $this->numberFormat($total, $decimals, $decimalPoint, $thousandSeperator);
     }
@@ -283,9 +293,9 @@ class Cart
     public function tax($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true)
     {
         if ($include_shipping === true) {
-            $content = $this->getContent();
+            $content = $this->getContent()->where('is_coupon', false);
         } else {
-            $content = $this->getContent()->where('is_shipping', false);
+            $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
         }
 
         $tax = $content->reduce(function ($tax, CartItem $cartItem) {
