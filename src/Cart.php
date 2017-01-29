@@ -222,7 +222,7 @@ class Cart
         }
 
         if ($coupons === true && $shipping === true) {
-            return $this->session->get($this->instance)->where('is_coupon', true)->where('is_shipping', true);
+            return $this->session->get($this->instance);
         }
 
         if ($coupons === true) {
@@ -523,14 +523,19 @@ class Cart
     public function shippingItem()
     {
         $content = $this->getContent();
+        $delivery_item = null;
 
         foreach ($content as $item) {
-            if ($item->is_shipping === true) {
-                return $item;
+            if ($item->is_shipping === true && $delivery_item === null) {
+                $delivery_item = $item;
+            }
+            // Extra safetly to remove duplicate delivery lines
+            else if ($item->is_shipping === true) {
+                $this->remove($item->rowId);
             }
         }
 
-        return null;
+        return $delivery_item;
     }
 
     /**
