@@ -259,25 +259,7 @@ class Cart
      */
     public function total($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_discount = true, $include_shipping = true)
     {
-        if ($include_shipping === true) {
-            $content = $this->getContent()->where('is_coupon', false);
-        } else {
-            $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
-        }
-
-        $total = $content->reduce(function ($total, CartItem $cartItem) {
-            return $total + ($cartItem->qty * $cartItem->priceTax);
-        }, 0);
-
-        // Subtract the discount
-        if ($include_discount === true) {
-            $coupons = $this->content(true);
-            if ($coupons !== null) {
-                foreach ($coupons as $coupon) {
-                    $total -= $coupon->price;
-                }
-            }
-        }
+        $total = $this->subtotal(9, null, '', $include_discount, $include_shipping) + $this->tax(9, null, '', $include_shipping, $include_discount);
 
         return $this->numberFormat($total, $decimals, $decimalPoint, $thousandSeperator);
     }
@@ -290,7 +272,7 @@ class Cart
      * @param string $thousandSeperator
      * @return float
      */
-    public function tax($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true)
+    public function tax($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_shipping = true, $include_discount = true)
     {
         if ($include_shipping === true) {
             $content = $this->getContent()->where('is_coupon', false);
@@ -298,9 +280,26 @@ class Cart
             $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
         }
 
-        $tax = $content->reduce(function ($tax, CartItem $cartItem) {
-            return $tax + ($cartItem->qty * $cartItem->tax);
-        }, 0);
+        if($include_discount) {
+            $coupons = $this->content(true);
+            $discount_val = 0;
+            if ($coupons !== null) {
+                foreach ($coupons as $coupon) {
+                    $discount_val += $coupon->price;
+                }
+            } 
+            $discount_unit = 0;
+            if($content->count() > 0) {
+                $discount_unit = $discount_val / $content->count();
+            }
+            $tax = $content->reduce(function ($tax, CartItem $cartItem) use($discount_unit) {
+                return $tax + ((($cartItem->qty * $cartItem->price) - $discount_unit) * ($cartItem->taxRate / 100));
+            }, 0);
+        } else {
+            $tax = $content->reduce(function ($tax, CartItem $cartItem) {
+                return $tax + ($cartItem->qty * $cartItem->tax);
+            }, 0); 
+        }
 
         return $this->numberFormat($tax, $decimals, $decimalPoint, $thousandSeperator);
     }
@@ -313,14 +312,27 @@ class Cart
      * @param string $thousandSeperator
      * @return float
      */
-    public function subtotal($decimals = null, $decimalPoint = null, $thousandSeperator = null)
+    public function subtotal($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_discount = false, $include_shipping = false)
     {
         // This is a good total, so exclude coupons and shipping
-        $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
+        if($include_shipping) {
+            $content = $this->getContent()->where('is_coupon', false);
+        } else {
+            $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
+        }
 
         $subTotal = $content->reduce(function ($subTotal, CartItem $cartItem) {
             return $subTotal + ($cartItem->qty * $cartItem->price);
         }, 0);
+
+        if ($include_discount === true) {
+            $coupons = $this->content(true);
+            if ($coupons !== null) {
+                foreach ($coupons as $coupon) {
+                    $subTotal -= $coupon->price;
+                }
+            }
+        }
 
         return $this->numberFormat($subTotal, $decimals, $decimalPoint, $thousandSeperator);
     }

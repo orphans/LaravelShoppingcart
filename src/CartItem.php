@@ -325,6 +325,10 @@ class CartItem implements Arrayable, Jsonable
             return $this->weight * $this->qty;
         }
 
+        if($attribute === 'taxRate') {
+            return $this->taxRate;
+        }
+
         return null;
     }
 
