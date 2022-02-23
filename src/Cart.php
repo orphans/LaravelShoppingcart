@@ -114,7 +114,8 @@ class Cart
 
         $content->put($cartItem->rowId, $cartItem);
 
-        $this->events->fire('cart.added', $cartItem);
+        $this->events->dispatch('cart.added', $cartItem);
+
 
         $this->session->put($this->instance, $content);
 
@@ -158,7 +159,7 @@ class Cart
             $content->put($cartItem->rowId, $cartItem);
         }
 
-        $this->events->fire('cart.updated', $cartItem);
+        $this->events->dispatch('cart.updated', $cartItem);
 
         $this->session->put($this->instance, $content);
 
@@ -179,7 +180,7 @@ class Cart
 
         $content->pull($cartItem->rowId);
 
-        $this->events->fire('cart.removed', $cartItem);
+        $this->events->dispatch('cart.removed', $cartItem);
 
         $this->session->put($this->instance, $content);
     }
@@ -287,7 +288,7 @@ class Cart
                 foreach ($coupons as $coupon) {
                     $discount_val += $coupon->price;
                 }
-            } 
+            }
             $discount_unit = 0;
             if($content->count() > 0) {
                 $discount_unit = $discount_val / $content->count();
@@ -298,7 +299,7 @@ class Cart
         } else {
             $tax = $content->reduce(function ($tax, CartItem $cartItem) {
                 return $tax + ($cartItem->qty * $cartItem->tax);
-            }, 0); 
+            }, 0);
         }
 
         return $this->numberFormat($tax, $decimals, $decimalPoint, $thousandSeperator);
@@ -444,7 +445,7 @@ class Cart
             ]);
         }
 
-        $this->events->fire('cart.stored');
+        $this->events->dispatch('cart.stored');
     }
 
     /**
@@ -474,7 +475,7 @@ class Cart
             $content->put($cartItem->rowId, $cartItem);
         }
 
-        $this->events->fire('cart.restored');
+        $this->events->dispatch('cart.restored');
 
         $this->session->put($this->instance, $content);
 
