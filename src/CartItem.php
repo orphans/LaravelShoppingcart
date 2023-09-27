@@ -44,6 +44,14 @@ class CartItem implements Arrayable, Jsonable
      */
     public $price;
 
+    
+    /**
+     * The price TAX of the cart item.
+     *
+     * @var float
+     */
+    public $priceTax;
+
     /**
      * The options for this cart item.
      *
