@@ -96,6 +96,16 @@ class Cart
     }
 
     /**
+     * Eager load cart item models with their relationships
+     *
+     * @return array
+     */
+    public function shouldLoadModelsWith()
+    {
+        return $this->modelsWith;
+    }
+
+    /**
      * Add an item to the cart.
      *
      * @param mixed     $id
