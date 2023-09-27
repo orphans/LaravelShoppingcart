@@ -6,6 +6,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Gloudemans\Shoppingcart\Contracts\Buyable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Arr;
+use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CartItem implements Arrayable, Jsonable
 {
@@ -43,7 +44,6 @@ class CartItem implements Arrayable, Jsonable
      * @var float
      */
     public $price;
-
     
     /**
      * The price TAX of the cart item.
@@ -339,7 +339,7 @@ class CartItem implements Arrayable, Jsonable
                 return $this->cachedModel;
             }
 
-            $this->cachedModel = with(new $this->associatedModel)->find($this->id);
+            $this->cachedModel = with(new $this->associatedModel)->with(Cart::$modelsWith)->find($this->id);
             return $this->cachedModel;
         }
 

@@ -38,6 +38,13 @@ class Cart
     private $instance;
 
     /**
+     * Allows eager loading of models with their relationships
+     * 
+     * @var array
+     */
+    public $modelsWith = [];
+
+    /**
      * Cart constructor.
      *
      * @param \Illuminate\Session\SessionManager      $session
@@ -74,6 +81,18 @@ class Cart
     public function currentInstance()
     {
         return str_replace('cart.', '', $this->instance);
+    }
+
+
+    /**
+     * Eager load cart item models with their relationships
+     * 
+     * @param array $with
+     * @return void
+     */
+    public function loadModelsWith($with)
+    {
+        $this->modelsWith = $with;
     }
 
     /**
