@@ -67,6 +67,13 @@ class CartItem implements Arrayable, Jsonable
     private $associatedModel = null;
 
     /**
+     * Cached model instance for performance
+     *
+     * @var Model
+     */
+    private $cachedModel = null;
+    
+    /**
      * The tax rate for the cart item.
      *
      * @var int|float
@@ -277,6 +284,7 @@ class CartItem implements Arrayable, Jsonable
     public function associate($model)
     {
         $this->associatedModel = is_string($model) ? $model : get_class($model);
+        $this->cachedModel = null;
 
         return $this;
     }
@@ -327,7 +335,12 @@ class CartItem implements Arrayable, Jsonable
         }
 
         if($attribute === 'model' && isset($this->associatedModel)) {
-            return with(new $this->associatedModel)->find($this->id);
+            if ($this->cachedModel) {
+                return $this->cachedModel;
+            }
+
+            $this->cachedModel = with(new $this->associatedModel)->find($this->id);
+            return $this->cachedModel;
         }
 
         if($attribute === 'totalWeight') {
