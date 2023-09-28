@@ -90,9 +90,9 @@ class Cart
      * @param array $with
      * @return void
      */
-    public function loadModelsWith($with)
+    public function loadModelsWith(string $model, array $with)
     {
-        $this->modelsWith = $with;
+        $this->modelsWith[$model] = $with;
     }
 
     /**
@@ -100,9 +100,9 @@ class Cart
      *
      * @return array
      */
-    public function shouldLoadModelsWith()
+    public function shouldLoadModelsWith(string $model)
     {
-        return $this->modelsWith;
+        return $this->modelsWith[$model] ?? [];
     }
 
     /**

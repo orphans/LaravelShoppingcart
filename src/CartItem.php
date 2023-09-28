@@ -339,7 +339,7 @@ class CartItem implements Arrayable, Jsonable
                 return $this->cachedModel;
             }
 
-            $this->cachedModel = with(new $this->associatedModel)->with(Cart::shouldLoadModelsWith())->find($this->id);
+            $this->cachedModel = with(new $this->associatedModel)->with(Cart::shouldLoadModelsWith($this->associatedModel))->find($this->id);
             return $this->cachedModel;
         }
 
