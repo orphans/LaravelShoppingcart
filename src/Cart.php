@@ -235,8 +235,13 @@ class Cart
      *
      * @return void
      */
-    public function destroy()
+    public function destroy(string $identifier = null)
     {
+        if ($identifier) {
+            $this->getConnection()->table($this->getTableName())
+                ->where('identifier', $identifier)->delete();
+        }
+
         $this->session->remove($this->instance);
     }
 
