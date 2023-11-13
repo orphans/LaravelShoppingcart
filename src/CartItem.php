@@ -2,6 +2,7 @@
 
 namespace Gloudemans\Shoppingcart;
 
+use App\Models\Product;
 use Illuminate\Contracts\Support\Arrayable;
 use Gloudemans\Shoppingcart\Contracts\Buyable;
 use Illuminate\Contracts\Support\Jsonable;
@@ -412,21 +413,29 @@ class CartItem implements Arrayable, Jsonable
      *
      * @return array
      */
-    public function toArray()
+
+    /**
+     * Get the instance as an array.
+     *
+     * @return array
+     */
+    public function toArray(): array
     {
         return [
-            'rowId'    => $this->rowId,
-            'id'       => $this->id,
-            'name'     => $this->name,
-            'qty'      => $this->qty,
-            'price'    => $this->price,
-            'options'  => $this->options->toArray(),
-            'weight'  => $this->weight,
-            'is_coupon'  => $this->is_coupon,
-            'is_shipping'  => $this->is_shipping,
-            'tax'      => $this->tax,
+            'rowId' => $this->rowId,
+            'id' => $this->id,
+            'name' => $this->name,
+            'qty' => $this->qty,
+            'price' => $this->price,
+            'priceTax' => $this->priceTax,
+            'options' => $this->options,
+            'weight' => $this->weight,
+            'is_coupon' => $this->is_coupon,
+            'is_shipping' => $this->is_shipping,
+            'tax' => $this->tax,
             'subtotal' => $this->subtotal,
-            'totalWeight' => $this->totalWeight
+            'totalWeight' => $this->totalWeight,
+            'associatedModel' => $this->associatedModel,
         ];
     }
 
@@ -436,7 +445,7 @@ class CartItem implements Arrayable, Jsonable
      * @param int $options
      * @return string
      */
-    public function toJson($options = 0)
+    public function toJson($options = 0): string
     {
         return json_encode($this->toArray(), $options);
     }
@@ -465,5 +474,32 @@ class CartItem implements Arrayable, Jsonable
         }
 
         return number_format($value, $decimals, $decimalPoint, $thousandSeperator);
+    }
+
+
+    /**
+     * Custom serialization to remove bloat
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Custom serialization to remove bloat
+     */
+    public function __unserialize(array $data): void
+    {
+        $this->rowId = $data['rowId'];
+        $this->id = $data['id'];
+        $this->name = $data['name'];
+        $this->qty = $data['qty'];
+        $this->price = $data['price'];
+        $this->priceTax = $data['priceTax'];
+        $this->options = $data['options'];
+        $this->weight = $data['weight'];
+        $this->is_coupon = $data['is_coupon'];
+        $this->is_shipping = $data['is_shipping'];
+        $this->associatedModel = $data['associatedModel'] ?? Product::class;
     }
 }
