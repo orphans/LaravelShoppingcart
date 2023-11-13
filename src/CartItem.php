@@ -495,7 +495,7 @@ class CartItem implements Arrayable, Jsonable
         $this->name = $data['name'];
         $this->qty = $data['qty'];
         $this->price = $data['price'];
-        $this->priceTax = $data['priceTax'];
+        $this->priceTax = $data['priceTax'] ?? 0;
         $this->options = $data['options'];
         $this->weight = $data['weight'];
         $this->is_coupon = $data['is_coupon'];
