@@ -114,13 +114,13 @@ class CartItem implements Arrayable, Jsonable
      */
     public function __construct($id, $name, $price, array $options = [], $weight = 0, $is_coupon = false, $is_shipping = false)
     {
-        if(empty($id)) {
+        if (empty($id)) {
             throw new \InvalidArgumentException('Please supply a valid identifier.');
         }
-        if(empty($name)) {
+        if (empty($name)) {
             throw new \InvalidArgumentException('Please supply a valid name.');
         }
-        if(strlen($price) < 0 || ! is_numeric($price)) {
+        if (strlen($price) < 0 || ! is_numeric($price)) {
             throw new \InvalidArgumentException('Please supply a valid price.');
         }
 
@@ -234,7 +234,7 @@ class CartItem implements Arrayable, Jsonable
      */
     public function setQuantity($qty)
     {
-        if(empty($qty) || ! is_numeric($qty))
+        if (empty($qty) || ! is_numeric($qty))
             throw new \InvalidArgumentException('Please supply a valid quantity.');
 
         $this->qty = $qty;
@@ -310,31 +310,31 @@ class CartItem implements Arrayable, Jsonable
      */
     public function __get($attribute)
     {
-        if(property_exists($this, $attribute)) {
+        if (property_exists($this, $attribute)) {
             return $this->{$attribute};
         }
 
-        if($attribute === 'priceTax') {
+        if ($attribute === 'priceTax') {
             return $this->price + $this->tax;
         }
 
-        if($attribute === 'subtotal') {
+        if ($attribute === 'subtotal') {
             return $this->qty * $this->price;
         }
 
-        if($attribute === 'total') {
+        if ($attribute === 'total') {
             return $this->qty * ($this->priceTax);
         }
 
-        if($attribute === 'tax') {
+        if ($attribute === 'tax') {
             return $this->price * ($this->taxRate / 100);
         }
 
-        if($attribute === 'taxTotal') {
+        if ($attribute === 'taxTotal') {
             return $this->tax * $this->qty;
         }
 
-        if($attribute === 'model' && isset($this->associatedModel)) {
+        if ($attribute === 'model' && isset($this->associatedModel)) {
             if ($this->cachedModel) {
                 return $this->cachedModel;
             }
@@ -343,11 +343,11 @@ class CartItem implements Arrayable, Jsonable
             return $this->cachedModel;
         }
 
-        if($attribute === 'totalWeight') {
+        if ($attribute === 'totalWeight') {
             return $this->weight * $this->qty;
         }
 
-        if($attribute === 'taxRate') {
+        if ($attribute === 'taxRate') {
             return $this->taxRate;
         }
 

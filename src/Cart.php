@@ -315,7 +315,7 @@ class Cart
             $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
         }
 
-        if($include_discount) {
+        if ($include_discount) {
             $coupons = $this->content(true);
             $discount_val = 0;
             if ($coupons !== null) {
@@ -324,7 +324,7 @@ class Cart
                 }
             }
             $discount_unit = 0;
-            if($content->count() > 0) {
+            if ($content->count() > 0) {
                 $discount_unit = $discount_val / $content->count();
             }
             $tax = $content->reduce(function ($tax, CartItem $cartItem) use($discount_unit) {
@@ -350,7 +350,7 @@ class Cart
     public function subtotal($decimals = null, $decimalPoint = null, $thousandSeperator = null, $include_discount = false, $include_shipping = false)
     {
         // This is a good total, so exclude coupons and shipping
-        if($include_shipping) {
+        if ($include_shipping) {
             $content = $this->getContent()->where('is_coupon', false);
         } else {
             $content = $this->getContent()->where('is_coupon', false)->where('is_shipping', false);
@@ -529,19 +529,19 @@ class Cart
      */
     public function __get($attribute)
     {
-        if($attribute === 'total') {
+        if ($attribute === 'total') {
             return $this->total();
         }
 
-        if($attribute === 'tax') {
+        if ($attribute === 'tax') {
             return $this->tax();
         }
 
-        if($attribute === 'subtotal') {
+        if ($attribute === 'subtotal') {
             return $this->subtotal();
         }
 
-        if($attribute === 'weight') {
+        if ($attribute === 'weight') {
             return $this->weight();
         }
 
@@ -681,13 +681,13 @@ class Cart
      */
     private function numberFormat($value, $decimals, $decimalPoint, $thousandSeperator)
     {
-        if(is_null($decimals)){
+        if (is_null($decimals)){
             $decimals = is_null(config('cart.format.decimals')) ? 2 : config('cart.format.decimals');
         }
-        if(is_null($decimalPoint)){
+        if (is_null($decimalPoint)){
             $decimalPoint = is_null(config('cart.format.decimal_point')) ? '.' : config('cart.format.decimal_point');
         }
-        if(is_null($thousandSeperator)){
+        if (is_null($thousandSeperator)){
             $thousandSeperator = is_null(config('cart.format.thousand_seperator')) ? ',' : config('cart.format.thousand_seperator');
         }
 
