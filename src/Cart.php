@@ -39,7 +39,7 @@ class Cart
 
     /**
      * Allows eager loading of models with their relationships
-     * 
+     *
      * @var array
      */
     public $modelsWith = [];
@@ -86,7 +86,7 @@ class Cart
 
     /**
      * Eager load cart item models with their relationships
-     * 
+     *
      * @param array $with
      * @return void
      */
@@ -228,6 +228,24 @@ class Cart
             throw new InvalidRowIDException("The cart does not contain rowId {$rowId}.");
 
         return $content->get($rowId);
+    }
+
+     /**
+     * Get a carts uuid by the carts identifier
+     *
+     * @param string|null $identifier
+     * @return string|null
+     */
+    public function uuid(string $identifier = null)
+    {
+        if ($identifier) {
+            $cart = $this->getConnection()->table($this->getTableName())
+                ->where('identifier', $identifier)->first();
+
+            return $cart ? $cart->uuid : '';
+        }
+
+        return null;
     }
 
     /**
@@ -472,6 +490,7 @@ class Cart
         } else {
             $this->getConnection()->table($this->getTableName())->insert([
                 'identifier' => $identifier,
+                'uuid' => $this->createUuid(),
                 'instance' => $this->currentInstance(),
                 'content' => serialize($content),
                 'created_at' => new \DateTime(),
@@ -692,5 +711,18 @@ class Cart
         }
 
         return number_format($value, $decimals, $decimalPoint, $thousandSeperator);
+    }
+
+    private function createUuid($data = null) {
+        // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
+        $data = $data ?? random_bytes(16);
+        assert(strlen($data) == 16);
+
+        // Set version to 0100
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        // Set bits 6-7 to 10
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }
