@@ -231,6 +231,24 @@ class Cart
     }
 
      /**
+     * Get the cart content from another identifier
+     *
+     * @param string|null $identifier
+     * @return string|null
+     */
+    public function cartContent(string $identifier = null)
+    {
+        if ($identifier) {
+            $cart = $this->getConnection()->table($this->getTableName())
+                ->where('identifier', $identifier)->first();
+
+            return $cart && $cart->content ? unserialize($cart->content) : new Collection;
+        }
+
+        return new Collection;
+    }
+
+     /**
      * Get a carts uuid by the carts identifier
      *
      * @param string|null $identifier
