@@ -234,9 +234,9 @@ class Cart
      * Get the cart content from another identifier
      *
      * @param string|null $identifier
-     * @return string|null
+     * @return Collection
      */
-    public function cartContent(string $identifier = null)
+    public function otherContent(?string $identifier = null)
     {
         if ($identifier) {
             $cart = $this->getConnection()->table($this->getTableName())
